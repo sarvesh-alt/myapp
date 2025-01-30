@@ -133,6 +133,7 @@ jobs:
           }
       # Build and Push Docker image for Unix systems
       - name: Build and Push Docker image (Unix)
+        if: runner.os != 'Windows'
         uses: docker/build-push-action@v5
         with:
           context: .
