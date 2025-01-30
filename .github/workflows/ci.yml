@@ -1,4 +1,4 @@
-name: Java CI with Gradle
+name: Java CI with Gradle and Docker
 
 on:
   push:
@@ -7,7 +7,7 @@ on:
     branches: [main]
 
 jobs:
-  build-java:
+  build-and-push:
     name: Build on ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     strategy:
@@ -16,99 +16,83 @@ jobs:
         os: [ubuntu-latest, windows-latest, macos-latest]
 
     steps:
-      - name: Echo message
-        run: echo "Hi, I am from COSC 1209 class"
-
       - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Set up JDK
+      # Set up JDK 8 to match your Dockerfile
+      - name: Set up JDK 8
         uses: actions/setup-java@v3
         with:
-          java-version: '17'
+          java-version: '8'
           distribution: 'temurin'
           cache: 'gradle'
-          java-package: 'jdk'
-          check-latest: false
-          server-id: 'github'
-          server-username: ${{ github.actor }}
-          server-password: ${{ secrets.GITHUB_TOKEN }}
-          overwrite-settings: true
 
-      # Handle Windows-specific Gradle wrapper
-      - name: Set Gradle wrapper permissions (Unix)
+      # Handle Gradle permissions
+      - name: Grant execute permission for gradlew (Unix)
         if: runner.os != 'Windows'
         run: chmod +x gradlew
 
-      # Build and test with Gradle (Windows)
-      - name: Build and test with Gradle (Windows)
+      # Build with Gradle - ensuring java-app-1.0-SNAPSHOT.jar is created
+      - name: Build with Gradle (Windows)
         if: runner.os == 'Windows'
-        run: |
-          ./gradlew.bat build
-          ./gradlew.bat test
+        run: .\gradlew.bat build
         shell: cmd
 
-      # Build and test with Gradle (Unix)
-      - name: Build and test with Gradle (Unix)
+      - name: Build with Gradle (Unix)
         if: runner.os != 'Windows'
-        run: |
-          ./gradlew build
-          ./gradlew test
+        run: ./gradlew build
         shell: bash
 
-      # Docker setup for each OS
-      - name: Install Docker (macOS)
+      # Verify JAR file exists
+      - name: Verify JAR file
+        run: |
+          if [ -f "build/libs/java-app-1.0-SNAPSHOT.jar" ]; then
+            echo "JAR file exists"
+          else
+            echo "JAR file not found"
+            exit 1
+          fi
+        shell: bash
+
+      # Setup Docker for macOS
+      - name: Set up Docker (macOS)
         if: runner.os == 'macOS'
         run: |
           brew install --cask docker
           open /Applications/Docker.app
           timeout=120
-          echo "Waiting for Docker to start..."
           while ! docker info > /dev/null 2>&1; do
             sleep 1
-            timeout=$((timeout - 1))
+            ((timeout--))
             if [ $timeout -le 0 ]; then
-              echo "Docker failed to start within timeout"
+              echo "Docker failed to start"
               exit 1
             fi
           done
-          docker --version
 
-      # Docker is pre-installed on Ubuntu runners
-      - name: Verify Docker (Ubuntu)
-        if: runner.os == 'Linux'
-        run: docker --version
-
-      # Docker Desktop for Windows
-      - name: Verify Docker (Windows)
-        if: runner.os == 'Windows'
-        run: |
-          docker --version
-        shell: pwsh
-
-      # Set up Docker Buildx (Skip for Windows)
+      # Set up Docker Buildx
       - name: Set up Docker Buildx
-        if: runner.os != 'Windows'
         uses: docker/setup-buildx-action@v3
         with:
           install: true
 
-      # Log in to Docker Hub
-      - name: Log in to Docker Hub
+      # Login to Docker Hub
+      - name: Login to Docker Hub
         uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
 
-  
-      # Build and Push Docker image for Unix systems
-      - name: Build and Push Docker image (Unix)
+      # Build and push for all platforms
+      - name: Build and push Docker image
         uses: docker/build-push-action@v5
         with:
           context: .
           file: ./Dockerfile
           push: true
-          tags: docker.io/sarveshalt/java-app:latest
+          tags: |
+            ${{ secrets.DOCKER_USERNAME }}/java-app:latest
+            ${{ secrets.DOCKER_USERNAME }}/java-app:${{ github.sha }}
           platforms: linux/amd64
-          cache-from: type=registry,ref=docker.io/sarveshalt/java-app:buildcache
-          cache-to: type=registry,ref=docker.io/sarveshalt/java-app:buildcache,mode=max
+          cache-from: type=registry,ref=${{ secrets.DOCKER_USERNAME }}/java-app:buildcache
+          cache-to: type=registry,ref=${{ secrets.DOCKER_USERNAME }}/java-app:buildcache,mode=max
