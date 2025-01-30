@@ -11,7 +11,7 @@ jobs:
     name: Build on ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     strategy:
-      fail-fast: false  # Continue with other OS builds even if one fails
+      fail-fast: false
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
 
@@ -22,12 +22,18 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Set up JDK 8 (Temurin)
+      - name: Set up JDK
         uses: actions/setup-java@v3
         with:
-          java-version: '8'
+          java-version: '17'
           distribution: 'temurin'
-          cache: gradle
+          cache: 'gradle'
+          java-package: 'jdk'
+          check-latest: false
+          server-id: 'github'
+          server-username: ${{ github.actor }}
+          server-password: ${{ secrets.GITHUB_TOKEN }}
+          overwrite-settings: true
 
       # Handle Windows-specific Gradle wrapper
       - name: Set Gradle wrapper permissions (Unix)
@@ -80,8 +86,9 @@ jobs:
           docker --version
         shell: pwsh
 
-      # Set up Docker Buildx
+      # Set up Docker Buildx (Skip for Windows)
       - name: Set up Docker Buildx
+        if: runner.os != 'Windows'
         uses: docker/setup-buildx-action@v3
         with:
           install: true
@@ -93,8 +100,17 @@ jobs:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
 
-      # Build and Push Docker image with platform-specific considerations
-      - name: Build and Push Docker image
+      # Build and Push Docker image for Windows
+      - name: Build and Push Docker image (Windows)
+        if: runner.os == 'Windows'
+        run: |
+          docker build -t docker.io/sarveshalt/java-app:latest .
+          docker push docker.io/sarveshalt/java-app:latest
+        shell: pwsh
+
+      # Build and Push Docker image for Unix systems
+      - name: Build and Push Docker image (Unix)
+        if: runner.os != 'Windows'
         uses: docker/build-push-action@v5
         with:
           context: .
