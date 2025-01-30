@@ -16,7 +16,10 @@ jobs:
     steps:
     - name: Echo message
       run: echo "Hi, I am from COSC 1209 class"
-
+      
+    - name: Show current OS
+      run: echo "Current runner OS: ${{ runner.os }}"
+    
     - name: Checkout code
       uses: actions/checkout@v2
 
@@ -52,9 +55,8 @@ jobs:
         # Wait for Docker to initialize
         Start-Sleep -Seconds 30
 
-    # Set up Docker Buildx for Linux, Windows, and macOS
+    # Set up Docker Buildx
     - name: Set up Docker Buildx
-      if: runner.os == 'ubuntu-latest' || runner.os == 'windows-latest' || runner.os == 'macos-latest'
       uses: docker/setup-buildx-action@v2
       with:
         version: latest
