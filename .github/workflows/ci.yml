@@ -41,23 +41,17 @@ jobs:
       run: |
         brew install --cask docker
         open /Applications/Docker.app
-        # Wait for Docker to start
-        echo "Waiting for Docker to start..."
-        while ! docker info > /dev/null 2>&1; do
-          sleep 1
-        done
-        echo "Docker is up and running!"
+        # Give Docker a few seconds to start
+        sleep 15
 
-    # Set up Docker Buildx for all environments (Linux, macOS, Windows)
-    - name: Set up Docker Buildx
-      if: runner.os != 'macOS'  # Skip on macOS as it is not needed
+    # Set up Docker Buildx only for Linux runners
+    - name: Set up Docker Buildx for Linux
+      if: runner.os == 'ubuntu-latest'
       uses: docker/setup-buildx-action@v2
       with:
         version: latest
-
-    - name: Set up QEMU for multi-platform builds
-      if: runner.os != 'macOS'  # Skip on macOS as it is not needed
-      uses: docker/setup-qemu-action@v2
+        driver: docker-container
+        buildkitd-flags: "--allow-insecure-entitlement security.insecure --allow-insecure-entitlement network.host"
 
     # Log in to Docker Hub
     - name: Log in to Docker Hub
