@@ -100,17 +100,9 @@ jobs:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
 
-      # Build and Push Docker image for Windows
-      - name: Build and Push Docker image (Windows)
-        if: runner.os == 'Windows'
-        run: |
-          docker build -t docker.io/sarveshalt/java-app:latest .
-          docker push docker.io/sarveshalt/java-app:latest
-        shell: pwsh
-
+  
       # Build and Push Docker image for Unix systems
       - name: Build and Push Docker image (Unix)
-        if: runner.os != 'Windows'
         uses: docker/build-push-action@v5
         with:
           context: .
