@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/openjdk/jdk:17-ubuntu AS windows-build
+FROM mcr.microsoft.com/openjdk/jdk:17-mariner AS windows-build
 
 # For Linux
 FROM openjdk:8-jre-alpine AS linux-build
