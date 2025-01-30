@@ -17,8 +17,6 @@ jobs:
     - name: Echo message
       run: echo "Hi, I am from COSC 1209 class"
       
-    - name: Show current OS
-      run: echo "Current runner OS: ${{ runner.os }}"
     
     - name: Checkout code
       uses: actions/checkout@v2
