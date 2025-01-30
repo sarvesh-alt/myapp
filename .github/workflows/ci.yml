@@ -17,7 +17,6 @@ jobs:
     - name: Echo message
       run: echo "Hi, I am from COSC 1209 class"
       
-    
     - name: Checkout code
       uses: actions/checkout@v2
 
@@ -45,21 +44,20 @@ jobs:
         # Give Docker a few seconds to start
         sleep 15
 
-    # Ensure Docker is running on Windows before Buildx setup
-    - name: Ensure Docker is running on Windows
-      if: runner.os == 'windows-latest'
-      run: |
-        Start-Process "C:\Program Files\Docker\Docker\Docker Desktop.exe"
-        # Wait for Docker to initialize
-        Start-Sleep -Seconds 30
-
-    # Set up Docker Buildx
+    # Set up Docker Buildx (Platform-specific)
     - name: Set up Docker Buildx
       uses: docker/setup-buildx-action@v2
       with:
         version: latest
         driver: docker-container
         buildkitd-flags: "--allow-insecure-entitlement security.insecure --allow-insecure-entitlement network.host"
+        
+    # Ensure Docker is running on Windows
+    - name: Ensure Docker is running on Windows
+      if: runner.os == 'windows-latest'
+      run: |
+        docker info
+        # Check if Docker is running, if not, raise an error
 
     # Log in to Docker Hub
     - name: Log in to Docker Hub
@@ -76,6 +74,7 @@ jobs:
         file: ./Dockerfile
         push: true
         tags: docker.io/sarveshalt/java-app:latest
+        platform: linux/amd64  # Specify the platform to ensure cross-OS compatibility
       env:
         DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
         DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
