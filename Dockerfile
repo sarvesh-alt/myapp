@@ -1,4 +1,7 @@
-FROM openjdk:8-jre-alpine
+FROM mcr.microsoft.com/openjdk:8-jre-windows AS windows-build
+
+# For Linux
+FROM openjdk:8-jre-alpine AS linux-build
 
 EXPOSE 8080
 

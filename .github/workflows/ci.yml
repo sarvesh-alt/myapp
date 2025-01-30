@@ -62,7 +62,7 @@ jobs:
         run: |
           brew install --cask docker
           open /Applications/Docker.app
-          timeout=60
+          timeout=120
           echo "Waiting for Docker to start..."
           while ! docker info > /dev/null 2>&1; do
             sleep 1
