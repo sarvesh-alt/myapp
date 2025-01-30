@@ -19,26 +19,36 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Set up JDK 8
+      # Updated JDK setup to use version 11
+      - name: Set up JDK 11
         uses: actions/setup-java@v3
         with:
-          java-version: '8'
+          java-version: '11'
           distribution: 'temurin'
           cache: 'gradle'
+          java-package: 'jdk'
+          check-latest: false
+          server-id: 'github'
+          server-username: ${{ github.actor }}
+          server-password: ${{ secrets.GITHUB_TOKEN }}
+          overwrite-settings: true
 
-      # Gradle build steps remain the same
-      - name: Grant execute permission for gradlew (Unix)
+      # Configure Gradle wrapper
+      - name: Make Gradle wrapper executable (Unix)
         if: runner.os != 'Windows'
         run: chmod +x gradlew
 
+      # Build with Gradle
       - name: Build with Gradle (Windows)
         if: runner.os == 'Windows'
-        run: .\gradlew.bat build
+        run: |
+          .\gradlew.bat build -Porg.gradle.java.home="${env:JAVA_HOME_11_X64}"
         shell: cmd
 
       - name: Build with Gradle (Unix)
         if: runner.os != 'Windows'
-        run: ./gradlew build
+        run: |
+          ./gradlew build
         shell: bash
 
       # Login to Docker Hub
@@ -48,20 +58,7 @@ jobs:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
 
-      # Unix build using original Dockerfile
-      - name: Build and push Docker image (Unix)
-        if: runner.os != 'Windows'
-        uses: docker/build-push-action@v5
-        with:
-          context: .
-          file: ./Dockerfile
-          push: true
-          tags: ${{ secrets.DOCKER_USERNAME }}/java-app:latest
-          platforms: linux/amd64
-          cache-from: type=registry,ref=${{ secrets.DOCKER_USERNAME }}/java-app:buildcache
-          cache-to: type=registry,ref=${{ secrets.DOCKER_USERNAME }}/java-app:buildcache,mode=max
-
-      # Windows build using Windows-specific Dockerfile
+      # Build and push Docker image (Windows)
       - name: Build and push Docker image (Windows)
         if: runner.os == 'Windows'
         shell: pwsh
@@ -71,10 +68,9 @@ jobs:
           
           # Create Windows-specific Dockerfile
           @"
-          FROM mcr.microsoft.com/windows/nanoserver:1809
+          FROM mcr.microsoft.com/java/jdk:11-windowsservercore-ltsc2019
           
           WORKDIR C:/app
-          
           COPY ./build/libs/java-app-1.0-SNAPSHOT.jar .
           
           EXPOSE 8080
@@ -82,16 +78,26 @@ jobs:
           ENTRYPOINT ["java", "-jar", "java-app-1.0-SNAPSHOT.jar"]
           "@ | Out-File -Encoding ASCII Dockerfile.windows
           
-          # Build the image using Windows-specific Dockerfile
           docker build -f Dockerfile.windows -t ${{ secrets.DOCKER_USERNAME }}/java-app:windows-latest .
           if ($LASTEXITCODE -ne 0) {
               Write-Host "Docker build failed"
               exit 1
           }
           
-          # Push the image
           docker push ${{ secrets.DOCKER_USERNAME }}/java-app:windows-latest
           if ($LASTEXITCODE -ne 0) {
               Write-Host "Docker push failed"
               exit 1
           }
+
+      # Build and push Docker image (Unix)
+      - name: Build and push Docker image (Unix)
+        if: runner.os != 'Windows'
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          tags: ${{ secrets.DOCKER_USERNAME }}/java-app:latest
+          platforms: linux/amd64
+          cache-from: type=registry,ref=${{ secrets.DOCKER_USERNAME }}/java-app:buildcache
+          cache-to: type=registry,ref=${{ secrets.DOCKER_USERNAME }}/java-app:buildcache,mode=max
