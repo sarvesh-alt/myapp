@@ -1,5 +1,4 @@
-
-FROM mcr.microsoft.com/openjdk/jdk:17-windowsservercore-ltsc2022
+FROM openjdk:8-jre-alpine
 
 EXPOSE 8080
 
