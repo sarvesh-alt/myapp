@@ -15,7 +15,7 @@ jobs:
 
     steps:
     - name: Echo message
-      run: echo "Hi, I am from COSC 1209 class ${{ matrix.os }}"
+      run: echo "Hi, I am from COSC 1209 class ${{ runner.os }}"
       
     - name: Checkout code
       uses: actions/checkout@v2
