@@ -44,9 +44,9 @@ jobs:
         # Give Docker a few seconds to start
         sleep 15
 
-    # Set up Docker Buildx only for Linux runners
-    - name: Set up Docker Buildx for Linux
-      if: runner.os == 'ubuntu-latest'
+    # Set up Docker Buildx for Linux and Windows
+    - name: Set up Docker Buildx
+      if: runner.os == 'ubuntu-latest' || runner.os == 'windows-latest'
       uses: docker/setup-buildx-action@v2
       with:
         version: latest
