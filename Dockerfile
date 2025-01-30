@@ -1,5 +1,5 @@
 
-FROM openjdk:17-jdk-slim
+FROM mcr.microsoft.com/openjdk/jdk:17-windowsservercore-ltsc2022
 
 EXPOSE 8080
 
