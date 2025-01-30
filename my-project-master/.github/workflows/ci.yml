@@ -17,6 +17,10 @@ jobs:
         os: [ubuntu-latest, windows-latest, macos-latest] # Multiple OS support (Ubuntu, Windows, macOS)
 
     steps:
+    # Echo message as requested
+    - name: Echo message
+      run: echo "Hi, I am from COSC 1209 class"
+
     # Checkout the code from the repository
     - name: Checkout code
       uses: actions/checkout@v2
@@ -49,7 +53,3 @@ jobs:
         registry: docker.io
         username: ${{ secrets.DOCKER_USERNAME }}
         password: ${{ secrets.DOCKER_PASSWORD }}
-
-
-
-
