@@ -1,0 +1,55 @@
+# This workflow will build a Java project with Gradle
+# For more information see: https://help.github.com/actions/language-and-framework-guides/building-and-testing-java-with-gradle
+
+name: Java CI with Gradle
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  build-java:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest] # Multiple OS support (Ubuntu, Windows, macOS)
+
+    steps:
+    # Echo message
+    - name: Echo message
+      run: echo "Hi, I am from COSC 1209 class"
+
+    # Checkout the code from the repository
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    # Set up JDK 1.8 (can change to another version if needed)
+    - name: Set up JDK 1.8
+      uses: actions/setup-java@v1
+      with:
+        java-version: 1.8
+
+    # Grant execute permission for gradlew on all systems
+    - name: Grant execute permission for gradlew
+      run: chmod +x gradlew
+
+    # Build the project using Gradle
+    - name: Build with Gradle
+      run: ./gradlew build
+
+    # Optionally, run tests after building
+    - name: Run tests with Gradle
+      run: ./gradlew test
+
+    # Build and push Docker images (ensure your Dockerfile is present in the repo)
+    - name: Build and push Docker images
+      uses: docker/build-push-action@v2
+      with:
+        context: .
+        file: ./Dockerfile # Path to your Dockerfile
+        image: sarveshalt/java-app
+        registry: docker.io
+        username: ${{ secrets.DOCKER_USERNAME }}
+        password: ${{ secrets.DOCKER_PASSWORD }}
