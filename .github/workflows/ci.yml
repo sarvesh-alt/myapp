@@ -52,9 +52,9 @@ jobs:
         # Wait for Docker to initialize
         Start-Sleep -Seconds 30
 
-    # Set up Docker Buildx for Linux and Windows
+    # Set up Docker Buildx for Linux, Windows, and macOS
     - name: Set up Docker Buildx
-      if: runner.os == 'ubuntu-latest' || runner.os == 'windows-latest'
+      if: runner.os == 'ubuntu-latest' || runner.os == 'windows-latest' || runner.os == 'macos-latest'
       uses: docker/setup-buildx-action@v2
       with:
         version: latest
