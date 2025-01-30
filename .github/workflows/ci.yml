@@ -16,9 +16,6 @@ jobs:
     steps:
     - name: Echo message
       run: echo "Hi, I am from COSC 1209 class"
-      
-    - name: Show current OS
-      run: echo "Current runner OS: ${{ runner.os }}"
 
     - name: Checkout code
       uses: actions/checkout@v2
@@ -40,16 +37,16 @@ jobs:
 
     # Install Docker on macOS
     - name: Install Docker on macOS
-      if: matrix.os == 'macos-latest'
+      if: runner.os == 'macOS'
       run: |
         brew install --cask docker
         open /Applications/Docker.app
         # Give Docker a few seconds to start
-        sleep 30
+        sleep 15
 
     # Ensure Docker is running on Windows before Buildx setup
     - name: Ensure Docker is running on Windows
-      if: matrix.os == 'windows-latest'
+      if: runner.os == 'windows-latest'
       run: |
         Start-Process "C:\Program Files\Docker\Docker\Docker Desktop.exe"
         # Wait for Docker to initialize
@@ -57,7 +54,7 @@ jobs:
 
     # Set up Docker Buildx for Linux, Windows, and macOS
     - name: Set up Docker Buildx
-      if: matrix.os == 'ubuntu-latest' || matrix.os == 'windows-latest' || matrix.os == 'macos-latest'
+      if: runner.os == 'ubuntu-latest' || runner.os == 'windows-latest' || runner.os == 'macos-latest'
       uses: docker/setup-buildx-action@v2
       with:
         version: latest
