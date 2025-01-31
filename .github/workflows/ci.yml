@@ -64,7 +64,7 @@ jobs:
           open -a docker
           while ! docker system info > /dev/null 2>&1; do
             echo "Waiting for Docker to start..."
-            sleep 1
+            sleep 2
           done
           docker --version  
                     
