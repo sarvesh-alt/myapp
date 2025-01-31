@@ -59,28 +59,36 @@ jobs:
       - name: Setup Docker for macOS
         if: runner.os == 'macOS'
         run: |
-          # Install Docker Desktop
-          brew install --cask docker
+          # Install Lima and Docker CLI
+          brew install lima docker
+      
+          # Download the Docker Lima template
+          curl -o docker.yaml https://raw.githubusercontent.com/lima-vm/lima/master/examples/docker.yaml
+      
+          # Start Lima with Docker template
+          limactl start --tty=false docker.yaml
+      
+          # Configure Docker CLI to use Lima
+          mkdir -p ~/.docker/cli-plugins
+          ln -sf $(which docker-lima) ~/.docker/cli-plugins/docker
           
-          # Start Docker daemon using CLI instead of open command
-          /Applications/Docker.app/Contents/MacOS/Docker --unattended &
-          
-          # Wait for Docker daemon to be ready
-          timeout=180  # 3 minutes timeout
-          while ! docker system info > /dev/null 2>&1; do
+          # Wait for Docker to be ready
+          timeout=180
+          while ! docker version > /dev/null 2>&1; do
             if [ $timeout -le 0 ]; then
               echo "Timed out waiting for Docker to start"
+              limactl stop docker
               exit 1
             fi
             echo "Waiting for Docker to start... ($timeout seconds remaining)"
             sleep 5
             timeout=$((timeout - 5))
           done
-          
+      
           # Verify Docker is running
-          docker --version
-          docker system info     
-                        
+          docker version
+          docker system info
+          
       # Docker is pre-installed on Ubuntu runners
       - name: Verify Docker (Ubuntu)
         if: runner.os == 'Linux'
