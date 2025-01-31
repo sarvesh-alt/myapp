@@ -59,14 +59,28 @@ jobs:
       - name: Setup Docker for macOS
         if: runner.os == 'macOS'
         run: |
+          # Install Docker Desktop
           brew install --cask docker
-          open -a docker
+          
+          # Start Docker daemon using CLI instead of open command
+          /Applications/Docker.app/Contents/MacOS/Docker --unattended &
+          
+          # Wait for Docker daemon to be ready
+          timeout=180  # 3 minutes timeout
           while ! docker system info > /dev/null 2>&1; do
-            echo "Waiting for Docker to start..."
-            sleep 1
+            if [ $timeout -le 0 ]; then
+              echo "Timed out waiting for Docker to start"
+              exit 1
+            fi
+            echo "Waiting for Docker to start... ($timeout seconds remaining)"
+            sleep 5
+            timeout=$((timeout - 5))
           done
-          docker --version  
-                    
+          
+          # Verify Docker is running
+          docker --version
+          docker system info     
+                        
       # Docker is pre-installed on Ubuntu runners
       - name: Verify Docker (Ubuntu)
         if: runner.os == 'Linux'
