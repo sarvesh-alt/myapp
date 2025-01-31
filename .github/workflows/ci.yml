@@ -56,14 +56,24 @@ jobs:
           ./gradlew test
         shell: bash
 
-      - name: Install Colima (macOS)
+      # Docker setup for each OS
+      - name: Install Docker (macOS)
         if: runner.os == 'macOS'
         run: |
-          brew install colima
-          colima start
+          brew install --cask docker
+          open -a Docker
+          open /Applications/Docker.app
+          timeout=120
+          echo "Waiting for Docker to start..."
+          while ! docker info > /dev/null 2>&1; do
+            sleep 1
+            timeout=$((timeout - 1))
+            if [ $timeout -le 0 ]; then
+              echo "Docker failed to start within timeout"
+              exit 1
+            fi
+          done
           docker --version
-      
-
       # Docker is pre-installed on Ubuntu runners
       - name: Verify Docker (Ubuntu)
         if: runner.os == 'Linux'
