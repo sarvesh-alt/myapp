@@ -73,8 +73,8 @@ jobs:
       - name: Install Docker (macOS)
         run: |
           echo "Installing Docker..."
-          brew install docker colima
-          colima start
+          brew install --cask docker
+          open /Applications/Docker.app
           sleep 20  # Wait for Colima to initialize
 
       - name: Verify Docker Installation
