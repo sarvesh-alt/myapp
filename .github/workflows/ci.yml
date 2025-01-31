@@ -82,7 +82,8 @@ jobs:
 
       - name: Check Docker info
         run: docker info || echo "Docker daemon is not running"
-
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v2
       - name: Set up Buildx
         uses: docker/setup-buildx-action@v1
         with:
