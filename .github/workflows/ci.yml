@@ -56,23 +56,17 @@ jobs:
           ./gradlew test
         shell: bash
 
-      # Docker setup for each OS
-      - name: Install Colima (macOS)
+      - name: Setup Docker for macOS
         if: runner.os == 'macOS'
         run: |
-          brew install colima docker
-          colima start
-          docker --version
-      
-      - name: Display Colima Logs (if any error occurs)
-        run: |
-            if [ -f "/Users/runner/.colima/_lima/colima/ha.stderr.log" ]; then
-              echo "Colima error logs:"
-              cat /Users/runner/.colima/_lima/colima/ha.stderr.log
-            else
-              echo "No error logs found."
-            fi
-               
+          brew install --cask docker
+          open -a docker
+          while ! docker system info > /dev/null 2>&1; do
+            echo "Waiting for Docker to start..."
+            sleep 1
+          done
+          docker --version  
+                    
       # Docker is pre-installed on Ubuntu runners
       - name: Verify Docker (Ubuntu)
         if: runner.os == 'Linux'
