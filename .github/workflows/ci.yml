@@ -71,14 +71,10 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
 
-      - name: Check if Docker is installed
-        run: which docker || echo "Docker not found"
-
-      - name: Install Docker if not found
+      - name: Start Docker
         run: |
-          brew install --cask docker
           open /Applications/Docker.app
-          sleep 30
+          sleep 30  # Wait for Docker to fully start
 
       - name: Check Docker info
         run: docker info || echo "Docker daemon is not running"
@@ -91,10 +87,6 @@ jobs:
           buildkitd-flags: --allow-insecure-entitlement security.insecure --allow-insecure-entitlement network.host
           use: true
           cleanup: true
-
-      - name: Build Docker image using Buildx
-        run: docker buildx build --tag my-image .
-
                     
       # Docker is pre-installed on Ubuntu runners
       - name: Verify Docker (Ubuntu)
