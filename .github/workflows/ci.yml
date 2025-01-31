@@ -66,7 +66,35 @@ jobs:
       #       echo "Waiting for Docker to start..."
       #       sleep 2
       #     done
-      #     docker --version       
+      #     docker --version 
+
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Check if Docker is installed
+        run: which docker || echo "Docker not found"
+
+      - name: Install Docker if not found
+        run: |
+          brew install --cask docker
+          open /Applications/Docker.app
+          sleep 30
+
+      - name: Check Docker info
+        run: docker info || echo "Docker daemon is not running"
+
+      - name: Set up Buildx
+        uses: docker/setup-buildx-action@v2
+        with:
+          install: true
+          driver: docker-container
+          buildkitd-flags: --allow-insecure-entitlement security.insecure --allow-insecure-entitlement network.host
+          use: true
+          cleanup: true
+
+      - name: Build Docker image using Buildx
+        run: docker buildx build --tag my-image .
+
                     
       # Docker is pre-installed on Ubuntu runners
       - name: Verify Docker (Ubuntu)
@@ -80,25 +108,7 @@ jobs:
           docker --version
         shell: pwsh
 
-      - name: Checkout code
-        uses: actions/checkout@v2
-
-      - name: Set up Docker
-        uses: docker/setup-buildx-action@v2
-        with:
-          install: true
-          driver: docker-container
-          buildkitd-flags: --allow-insecure-entitlement security.insecure --allow-insecure-entitlement network.host
-          use: true
-          cleanup: true
-
-      - name: Check Docker info
-        run: docker info
-
-      - name: Build Docker image using Buildx
-        run: docker buildx build --tag my-image .             
-     
-        # Set up Docker Buildx (Skip for Windows)
+      # Set up Docker Buildx (Skip for Windows)
       - name: Set up Docker Buildx
         if: runner.os != 'Windows'
         uses: docker/setup-buildx-action@v3
