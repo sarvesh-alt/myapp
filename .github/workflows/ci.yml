@@ -75,6 +75,10 @@ jobs:
           echo "Installing Docker..."
           brew install --cask docker
           open /Applications/Docker.app
+          brew services restart docker
+          ps aux | grep -i docker
+          sudo chmod 666 /var/run/docker.sock
+
           sleep 20  # Wait for Colima to initialize
 
       - name: Verify Docker Installation
