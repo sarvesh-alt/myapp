@@ -89,29 +89,29 @@ jobs:
                 echo "Docker could not be found. Exiting setup."
                 exit 1
             fi
-
-            # Open Docker Desktop application
-            echo "Attempting to open Docker Desktop..."
-            open -a "Docker" || echo "Could not open Docker, attempting with full path"
+        
+            # Open Docker Desktop application using AppleScript
+            echo "Attempting to open Docker Desktop with AppleScript..."
+            osascript -e 'tell application "Docker" to activate'
             
-            # Alternative approach if the above fails:
-            if ! pgrep -x "Docker" > /dev/null
-            then
-                echo "Docker is not running. Starting it manually..."
-                open -a /Applications/Docker.app
-            fi
-            
-            # Wait for Docker daemon to be ready
+            # Wait for Docker daemon to be ready (extended wait time)
             echo "Waiting for Docker to start..."
+            MAX_WAIT=300  # Max wait time (5 minutes)
+            WAIT_TIME=0
             while ! docker system info > /dev/null 2>&1; do
-              echo "Waiting for Docker to start..."
-              sleep 2  # Wait 2 seconds before checking again
+              if [ $WAIT_TIME -ge $MAX_WAIT ]; then
+                echo "Timeout reached. Docker didn't start in time."
+                exit 1
+              fi
+              echo "Waiting for Docker to start... ($WAIT_TIME seconds)"
+              sleep 5  # Wait 5 seconds before checking again
+              WAIT_TIME=$((WAIT_TIME + 5))
             done
-
+        
             # Once Docker is ready, check the Docker version
             echo "Docker is running!"
             docker --version
-
+        
 
       
                     
