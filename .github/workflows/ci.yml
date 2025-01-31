@@ -80,6 +80,15 @@ jobs:
           docker --version
         shell: pwsh
 
+      - name: Set up Docker Buildx
+        if: runner.os == 'macOS'
+        uses: docker/setup-buildx-action@v2
+        with:
+          install: true
+          driver: docker-container
+      - name: Docker Buildx
+        run: docker buildx create --name mybuilder --use
+              
       # Set up Docker Buildx (Skip for Windows)
       - name: Set up Docker Buildx
         if: runner.os != 'Windows'
