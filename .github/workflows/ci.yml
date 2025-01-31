@@ -56,17 +56,50 @@ jobs:
           ./gradlew test
         shell: bash
 
+      # - name: Setup Docker for macOS
+      #   if: runner.os == 'macOS'
+      #   run: |
+      #     brew install --cask docker
+      #     which docker
+      #     open -a docker
+      #     while ! docker system info > /dev/null 2>&1; do
+      #       echo "Waiting for Docker to start..."
+      #       sleep 2
+      #     done
+      #     docker --version 
+      
       - name: Setup Docker for macOS
         if: runner.os == 'macOS'
         run: |
+          echo "Installing Docker..."
           brew install --cask docker
+          
+          echo "Checking Docker binary location..."
           which docker
-          open -a docker
+          echo "Docker location: $(which docker)"
+          
+          if ! command -v docker &> /dev/null
+          then
+              echo "Docker could not be found. Exiting setup."
+              exit 1
+          fi
+
+          # Open Docker Desktop application
+          echo "Opening Docker Desktop..."
+          open -a Docker
+
+          # Wait for Docker daemon to be ready
+          echo "Waiting for Docker to start..."
           while ! docker system info > /dev/null 2>&1; do
             echo "Waiting for Docker to start..."
-            sleep 2
+            sleep 2  # Wait 2 seconds before checking again
           done
-          docker --version  
+
+          # Once Docker is ready, check the Docker version
+          echo "Docker is running!"
+          docker --version
+
+      
                     
       # Docker is pre-installed on Ubuntu runners
       - name: Verify Docker (Ubuntu)
