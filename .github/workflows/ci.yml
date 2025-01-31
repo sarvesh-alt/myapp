@@ -98,9 +98,9 @@ jobs:
           echo "Attempting to open Docker Desktop with full path..."
           sudo open -a /Applications/Docker.app
           
-          # Wait for Docker daemon to be ready (extended wait time)
+          # Wait for Docker daemon to be ready (increased wait time)
           echo "Waiting for Docker to start..."
-          MAX_WAIT=300  # Max wait time (5 minutes)
+          MAX_WAIT=600  # Increased max wait time (10 minutes)
           WAIT_TIME=0
           while ! sudo /Applications/Docker.app/Contents/Resources/bin/docker system info > /dev/null 2>&1; do
             if [ $WAIT_TIME -ge $MAX_WAIT ]; then
@@ -108,13 +108,14 @@ jobs:
               exit 1
             fi
             echo "Waiting for Docker to start... ($WAIT_TIME seconds)"
-            sleep 5  # Wait 5 seconds before checking again
-            WAIT_TIME=$((WAIT_TIME + 5))
+            sleep 10  # Wait 10 seconds before checking again
+            WAIT_TIME=$((WAIT_TIME + 10))
           done
           
           # Once Docker is ready, check the Docker version again
           echo "Docker is running!"
           sudo /Applications/Docker.app/Contents/Resources/bin/docker --version
+      
     
 
       
