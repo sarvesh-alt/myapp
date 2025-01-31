@@ -60,6 +60,7 @@ jobs:
         if: runner.os == 'macOS'
         run: |
           brew install --cask docker
+          which docker
           open -a docker
           while ! docker system info > /dev/null 2>&1; do
             echo "Waiting for Docker to start..."
