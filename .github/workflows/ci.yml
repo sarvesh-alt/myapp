@@ -71,34 +71,47 @@ jobs:
       - name: Setup Docker for macOS
         if: runner.os == 'macOS'
         run: |
-          echo "Installing Docker..."
-          brew install --cask docker
-          
-          export PATH="/Applications/Docker.app/Contents/Resources/bin:$PATH"
-          echo "Checking Docker binary location..."
-          which docker
-          echo "Docker location: $(which docker)"
-          
-          if ! command -v docker &> /dev/null
-          then
-              echo "Docker could not be found. Exiting setup."
-              exit 1
-          fi
+            # Install Docker using Homebrew
+            echo "Installing Docker..."
+            brew install --cask docker
+            
+            # Add Docker to PATH explicitly (for CI/CD environment)
+            export PATH="/Applications/Docker.app/Contents/Resources/bin:$PATH"
+            
+            # Verify if docker command is in the PATH
+            echo "Checking Docker binary location..."
+            which docker
+            echo "Docker location: $(which docker)"
+            
+            # Ensure Docker is accessible
+            if ! command -v docker &> /dev/null
+            then
+                echo "Docker could not be found. Exiting setup."
+                exit 1
+            fi
 
-          # Open Docker Desktop application
-          echo "Opening Docker Desktop..."
-          open -a Docker
-
-          # Wait for Docker daemon to be ready
-          echo "Waiting for Docker to start..."
-          while ! docker system info > /dev/null 2>&1; do
+            # Open Docker Desktop application
+            echo "Attempting to open Docker Desktop..."
+            open -a "Docker" || echo "Could not open Docker, attempting with full path"
+            
+            # Alternative approach if the above fails:
+            if ! pgrep -x "Docker" > /dev/null
+            then
+                echo "Docker is not running. Starting it manually..."
+                open -a /Applications/Docker.app
+            fi
+            
+            # Wait for Docker daemon to be ready
             echo "Waiting for Docker to start..."
-            sleep 2  # Wait 2 seconds before checking again
-          done
+            while ! docker system info > /dev/null 2>&1; do
+              echo "Waiting for Docker to start..."
+              sleep 2  # Wait 2 seconds before checking again
+            done
 
-          # Once Docker is ready, check the Docker version
-          echo "Docker is running!"
-          docker --version
+            # Once Docker is ready, check the Docker version
+            echo "Docker is running!"
+            docker --version
+
 
       
                     
