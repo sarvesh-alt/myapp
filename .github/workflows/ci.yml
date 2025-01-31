@@ -90,19 +90,19 @@ jobs:
               exit 1
           fi
           
-          # Run Docker directly from its location
-          echo "Running Docker from its location..."
-          /Applications/Docker.app/Contents/Resources/bin/docker --version
+          # Run Docker from its location with sudo
+          echo "Running Docker from its location with sudo..."
+          sudo /Applications/Docker.app/Contents/Resources/bin/docker --version
           
-          # Open Docker Desktop application using full path (if required)
+          # Open Docker Desktop application using full path (with sudo if needed)
           echo "Attempting to open Docker Desktop with full path..."
-          open -a /Applications/Docker.app
+          sudo open -a /Applications/Docker.app
           
           # Wait for Docker daemon to be ready (extended wait time)
           echo "Waiting for Docker to start..."
           MAX_WAIT=300  # Max wait time (5 minutes)
           WAIT_TIME=0
-          while ! /Applications/Docker.app/Contents/Resources/bin/docker system info > /dev/null 2>&1; do
+          while ! sudo /Applications/Docker.app/Contents/Resources/bin/docker system info > /dev/null 2>&1; do
             if [ $WAIT_TIME -ge $MAX_WAIT ]; then
               echo "Timeout reached. Docker didn't start in time."
               exit 1
@@ -114,7 +114,7 @@ jobs:
           
           # Once Docker is ready, check the Docker version again
           echo "Docker is running!"
-          /Applications/Docker.app/Contents/Resources/bin/docker --version
+          sudo /Applications/Docker.app/Contents/Resources/bin/docker --version
     
 
       
