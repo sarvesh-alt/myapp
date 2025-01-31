@@ -74,6 +74,7 @@ jobs:
           echo "Installing Docker..."
           brew install --cask docker
           
+          export PATH="/Applications/Docker.app/Contents/Resources/bin:$PATH"
           echo "Checking Docker binary location..."
           which docker
           echo "Docker location: $(which docker)"
