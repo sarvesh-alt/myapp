@@ -80,16 +80,25 @@ jobs:
           docker --version
         shell: pwsh
 
-      - name: Set up Docker Buildx
-        if: runner.os == 'macOS'
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Set up Docker
         uses: docker/setup-buildx-action@v2
         with:
           install: true
           driver: docker-container
-      - name: Docker Buildx
-        run: docker buildx create --name mybuilder --use
-              
-      # Set up Docker Buildx (Skip for Windows)
+          buildkitd-flags: --allow-insecure-entitlement security.insecure --allow-insecure-entitlement network.host
+          use: true
+          cleanup: true
+
+      - name: Check Docker info
+        run: docker info
+
+      - name: Build Docker image using Buildx
+        run: docker buildx build --tag my-image .             
+     
+        # Set up Docker Buildx (Skip for Windows)
       - name: Set up Docker Buildx
         if: runner.os != 'Windows'
         uses: docker/setup-buildx-action@v3
