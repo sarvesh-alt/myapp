@@ -63,7 +63,16 @@ jobs:
           brew install colima docker
           colima start
           docker --version
-             
+      
+      - name: Display Colima Logs (if any error occurs)
+        run: |
+            if [ -f "/Users/runner/.colima/_lima/colima/ha.stderr.log" ]; then
+              echo "Colima error logs:"
+              cat /Users/runner/.colima/_lima/colima/ha.stderr.log
+            else
+              echo "No error logs found."
+            fi
+               
       # Docker is pre-installed on Ubuntu runners
       - name: Verify Docker (Ubuntu)
         if: runner.os == 'Linux'
