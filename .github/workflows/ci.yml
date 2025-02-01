@@ -72,31 +72,36 @@ jobs:
 
       - name: Install Docker (macOS)
         run: |
-          # Install Docker CLI and Colima
-          brew install docker colima
+            #!/bin/bash
 
-          # Start Colima with minimal settings
-          colima start --cpu 1 --memory 2 --disk 10 || { echo "Failed to start Colima"; exit 1; }
+            # Install Docker CLI and Colima
+            brew install docker colima
 
-          # Wait for Docker to initialize and check for socket file
-          attempts=0
-          while [ ! -S /var/run/docker.sock ] && [ $attempts -lt 6 ]; do
-              echo "Waiting for Docker to initialize... (attempt $((attempts+1)))"
-              sleep 10
-              attempts=$((attempts+1))
-          done
+            # Start Colima with minimal settings
+            colima start --cpu 1 --memory 2 --disk 10 || { echo "Failed to start Colima"; exit 1; }
 
-          # If Docker socket is not found, print error and exit
-          if [ ! -S /var/run/docker.sock ]; then
-              echo "Error: Docker socket not found. Check Colima status."
-              colima status
-              colima logs
-              exit 1
-          fi
+            # Wait for Docker to initialize and check for socket file
+            attempts=0
+            while [ ! -S /var/run/docker.sock ] && [ $attempts -lt 6 ]; do
+                echo "Waiting for Docker to initialize... (attempt $((attempts+1)))"
+                sleep 10
+                attempts=$((attempts+1))
+            done
 
-          # Fix permissions and verify Docker is running
-          sudo chmod 666 /var/run/docker.sock
-          docker info || { echo "Docker is not running properly"; exit 1; }
+            # If Docker socket is not found, print error and exit
+            if [ ! -S /var/run/docker.sock ]; then
+                echo "Error: Docker socket not found. Check Colima status."
+                colima status
+                colima logs
+                exit 1
+            fi
+
+            # Fix permissions and verify Docker is running
+            sudo chmod 666 /var/run/docker.sock
+            docker info || { echo "Docker is not running properly"; exit 1; }
+
+            echo "Docker and Colima are successfully installed and running."
+
 
 
       - name: Verify Docker Installation
