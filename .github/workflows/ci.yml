@@ -72,8 +72,8 @@ jobs:
 
       - name: Install Docker (macOS)
         run: |
-          # Install Colima and Docker CLI
-          brew install colima docker
+          # Install required packages
+          brew install qemu colima docker
 
           # Start Colima with specific settings for CI environment
           colima start --cpu 2 --memory 4 --disk 60 --vm-type=qemu
