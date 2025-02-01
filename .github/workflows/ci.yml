@@ -72,11 +72,11 @@ jobs:
 
       - name: Install Docker (macOS)
         run: |
-          # Install required packages
-          brew install qemu colima docker
+          # Install Docker CLI and Colima
+          brew install docker colima
 
-          # Start Colima with specific settings for CI environment
-          colima start --cpu 2 --memory 4 --disk 60 --vm-type=qemu
+          # Start Colima with minimal settings
+          colima start --arch aarch64 --cpu 1 --memory 2 --disk 10
 
           # Wait for initialization and check for socket file
           for i in {1..6}; do
