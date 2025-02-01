@@ -76,20 +76,28 @@ jobs:
           brew install docker colima
 
           # Start Colima with minimal settings
-          colima start --arch aarch64 --cpu 1 --memory 2 --disk 10
+          colima start --cpu 1 --memory 2 --disk 10 || { echo "Failed to start Colima"; exit 1; }
 
-          # Wait for initialization and check for socket file
-          for i in {1..6}; do
-              if [ -S /var/run/docker.sock ]; then
-                  sudo chmod 666 /var/run/docker.sock
-                  break
-              fi
-              echo "Waiting for Docker to initialize... (attempt $i)"
+          # Wait for Docker to initialize and check for socket file
+          attempts=0
+          while [ ! -S /var/run/docker.sock ] && [ $attempts -lt 6 ]; do
+              echo "Waiting for Docker to initialize... (attempt $((attempts+1)))"
               sleep 10
+              attempts=$((attempts+1))
           done
 
-          # Verify Docker is running
-          docker info
+          # If Docker socket is not found, print error and exit
+          if [ ! -S /var/run/docker.sock ]; then
+              echo "Error: Docker socket not found. Check Colima status."
+              colima status
+              colima logs
+              exit 1
+          fi
+
+          # Fix permissions and verify Docker is running
+          sudo chmod 666 /var/run/docker.sock
+          docker info || { echo "Docker is not running properly"; exit 1; }
+
 
       - name: Verify Docker Installation
         run: docker info
