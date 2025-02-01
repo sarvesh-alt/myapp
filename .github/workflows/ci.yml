@@ -72,19 +72,24 @@ jobs:
 
       - name: Install Docker (macOS)
         run: |
-            brew install --cask docker
+          # Install Docker
+          brew install --cask docker
 
-            # Start Docker.app
-            open /Applications/Docker.app
+          # Start Docker.app
+          open /Applications/Docker.app
 
-            # Wait longer for initialization
-            sleep 30
+          # Wait longer for initialization and check for socket file
+          for i in {1..6}; do
+              if [ -S /var/run/docker.sock ]; then
+                  sudo chmod 666 /var/run/docker.sock
+                  break
+              fi
+              echo "Waiting for Docker to initialize... (attempt $i)"
+              sleep 10
+          done
 
-            # Set socket permissions if needed
-            sudo chmod 666 /var/run/docker.sock
-
-            # Verify Docker is running
-            docker info
+          # Verify Docker is running
+          docker info
 
       - name: Verify Docker Installation
         run: docker info
