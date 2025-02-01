@@ -1,123 +1,79 @@
-name: Java CI with Gradle
+name: CI Pipeline for Windows, Linux, macOS
 
 on:
   push:
-    branches: [main]
+    branches:
+      - main
   pull_request:
-    branches: [main]
 
 jobs:
-  build-java:
-    name: Build on ${{ matrix.os }}
+  build:
     runs-on: ${{ matrix.os }}
     strategy:
-      fail-fast: false
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
 
     steps:
-      - name: Echo message
-        run: echo "Hi, I am from COSC 1209 class"
-
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
-      - name: Set up JDK
-        uses: actions/setup-java@v3
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
         with:
-          java-version: '17'
-          distribution: 'temurin'
-          cache: 'gradle'
-          java-package: 'jdk'
-          check-latest: false
-          server-id: 'github'
-          server-username: ${{ github.actor }}
-          server-password: ${{ secrets.GITHUB_TOKEN }}
-          overwrite-settings: true
+          node-version: 18
 
-      # Handle Windows-specific Gradle wrapper
-      - name: Set Gradle wrapper permissions (Unix)
-        if: runner.os != 'Windows'
-        run: chmod +x gradlew
+      - name: Install dependencies
+        run: npm install
 
-      # Build and test with Gradle (Windows)
-      - name: Build and test with Gradle (Windows)
-        if: runner.os == 'Windows'
-        run: |
-          ./gradlew.bat build
-          ./gradlew.bat test
-        shell: cmd
+      - name: Run tests
+        run: npm test
 
-      # Build and test with Gradle (Unix)
-      - name: Build and test with Gradle (Unix)
-        if: runner.os != 'Windows'
-        run: |
-          ./gradlew build
-          ./gradlew test
-        shell: bash
+  docker-build:
+    runs-on: ubuntu-latest  # Docker can run natively on Ubuntu
+    needs: build
+    if: matrix.os == 'ubuntu-latest'  # Run Docker build only on Linux (Ubuntu)
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-      # Docker Setup for macOS
-      - name: Install Docker on macOS
-        if: runner.os == 'macos-latest'
-        run: |
-          brew install docker colima
-          colima start --cpu 1 --memory 2 --disk 10 || { echo "Failed to start Colima"; exit 1; }
-          attempts=0
-          while [ ! -S /var/run/docker.sock ] && [ $attempts -lt 6 ]; do
-            echo "Waiting for Docker to initialize... (attempt $((attempts+1)))"
-            sleep 10
-            attempts=$((attempts+1))
-          done
-          if [ ! -S /var/run/docker.sock ]; then
-            echo "Error: Docker socket not found. Check Colima status."
-            colima status
-            colima logs
-            exit 1
-          fi
-          sudo chmod 666 /var/run/docker.sock
-          docker info || { echo "Docker is not running properly"; exit 1; }
-
-      - name: Verify Docker Installation
-        run: docker info
-
-      # Set up Docker Buildx for all platforms
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v2
-        with:
-          install: true
+        uses: docker/setup-buildx-action@v3
 
-      # Build Docker image using Buildx
-      - name: Build Docker image using Buildx
-        run: docker buildx build --tag my-java-app . --push
-
-      # Docker is pre-installed on Ubuntu runners
-      - name: Verify Docker (Ubuntu)
-        if: runner.os == 'Linux'
-        run: docker --version
-
-      # Docker Desktop for Windows
-      - name: Verify Docker (Windows)
-        if: runner.os == 'Windows'
-        run: |
-          docker --version
-        shell: pwsh
-
-      # Log in to Docker Hub
-      - name: Log in to Docker Hub
-        uses: docker/login-action@v3
-        with:
-          username: ${{ secrets.DOCKER_USERNAME }}
-          password: ${{ secrets.DOCKER_PASSWORD }}
-
-      # Build and push Docker image for Unix systems
-      - name: Build and Push Docker image (Unix)
-        if: runner.os != 'Windows'
+      - name: Build Docker image
         uses: docker/build-push-action@v5
         with:
           context: .
-          file: ./Dockerfile
-          push: true
-          tags: docker.io/${{ secrets.DOCKER_USERNAME }}/java-app:latest
-          platforms: linux/amd64
-          cache-from: type=registry,ref=docker.io/${{ secrets.DOCKER_USERNAME }}/java-app:buildcache
-          cache-to: type=registry,ref=docker.io/${{ secrets.DOCKER_USERNAME }}/java-app:buildcache,mode=max
+          push: false
+          tags: myapp:latest
+
+  # For Windows: Use a Windows-based Docker Build approach (if needed)
+  docker-build-windows:
+    runs-on: windows-latest
+    needs: build
+    if: matrix.os == 'windows-latest'  # Run Docker build only on Windows
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx (Windows with WSL2 support)
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: false
+          tags: myapp:latest
+
+  # Skip Docker build for macOS
+  docker-build-macos:
+    runs-on: macos-latest
+    needs: build
+    if: matrix.os == 'macos-latest'  # Skip Docker build for macOS
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Build or Test without Docker
+        run: |
+          echo "Docker is skipped for macOS since it's not natively supported"
