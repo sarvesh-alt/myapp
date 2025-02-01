@@ -75,8 +75,8 @@ jobs:
           # Install Colima and Docker CLI
           brew install colima docker
 
-          # Start Colima
-          colima start
+          # Start Colima with specific settings for CI environment
+          colima start --cpu 2 --memory 4 --disk 60 --vm-type=qemu
 
           # Wait for initialization and check for socket file
           for i in {1..6}; do
