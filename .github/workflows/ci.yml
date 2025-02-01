@@ -76,6 +76,8 @@ jobs:
           brew install --cask docker
           open /Applications/Docker.app
           brew list --cask | grep docker
+          ls -l /var/run/docker.sock
+
           ps aux | grep -i docker
           sudo chmod 666 /var/run/docker.sock
 
