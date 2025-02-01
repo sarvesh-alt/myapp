@@ -75,10 +75,11 @@ jobs:
           echo "Installing Docker..."
           brew install --cask docker
           open /Applications/Docker.app
-          brew list --cask | grep docker
-          ls -l /var/run/docker.sock
-
+          killall Docker
+          open /Applications/Docker.app
+          sleep 20
           ps aux | grep -i docker
+          ls -l /var/run/docker.sock
           sudo chmod 666 /var/run/docker.sock
 
           sleep 20  # Wait for Colima to initialize
