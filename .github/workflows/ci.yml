@@ -75,7 +75,7 @@ jobs:
           echo "Installing Docker..."
           brew install --cask docker
           open /Applications/Docker.app
-          brew services restart docker
+          brew list --cask | grep docker
           ps aux | grep -i docker
           sudo chmod 666 /var/run/docker.sock
 
