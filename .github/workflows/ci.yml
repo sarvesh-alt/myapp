@@ -72,13 +72,13 @@ jobs:
 
       - name: Install Docker (macOS)
         run: |
-          # Install Docker
-          brew install --cask docker
+          # Install Colima and Docker CLI
+          brew install colima docker
 
-          # Start Docker.app
-          open /Applications/Docker.app
+          # Start Colima
+          colima start
 
-          # Wait longer for initialization and check for socket file
+          # Wait for initialization and check for socket file
           for i in {1..6}; do
               if [ -S /var/run/docker.sock ]; then
                   sudo chmod 666 /var/run/docker.sock
