@@ -35,7 +35,7 @@ jobs:
           server-password: ${{ secrets.GITHUB_TOKEN }}
           overwrite-settings: true
 
-      # Handle Windows-specific Gradle wrapper
+      # Handle Gradle wrapper permissions on Unix systems (Linux/macOS)
       - name: Set Gradle wrapper permissions (Unix)
         if: runner.os != 'Windows'
         run: chmod +x gradlew
@@ -44,143 +44,19 @@ jobs:
       - name: Build and test with Gradle (Windows)
         if: runner.os == 'Windows'
         run: |
-          ./gradlew.bat build
-          ./gradlew.bat test
+          .\gradlew.bat build
+          .\gradlew.bat test
         shell: cmd
 
-      # Build and test with Gradle (Unix)
-      - name: Build and test with Gradle (Unix)
+      # Build and test with Gradle (Linux/macOS)
+      - name: Build and test with Gradle (Linux/macOS)
         if: runner.os != 'Windows'
         run: |
           ./gradlew build
           ./gradlew test
         shell: bash
 
-      # - name: Setup Docker for macOS
-      #   if: runner.os == 'macOS'
-      #   run: |
-      #     brew install --cask docker
-      #     which docker
-      #     open -a docker
-      #     while ! docker system info > /dev/null 2>&1; do
-      #       echo "Waiting for Docker to start..."
-      #       sleep 2
-      #     done
-      #     docker --version 
-      - name: Checkout repository
-        uses: actions/checkout@v3
-
-      - name: Install Docker (macOS)
-        run: |
-            #!/bin/bash
-
-            # Install Docker CLI and Colima
-            brew install docker colima
-
-            # Start Colima with minimal settings
-            colima start --cpu 1 --memory 2 --disk 10 || { echo "Failed to start Colima"; exit 1; }
-
-            # Wait for Docker to initialize and check for socket file
-            attempts=0
-            while [ ! -S /var/run/docker.sock ] && [ $attempts -lt 6 ]; do
-                echo "Waiting for Docker to initialize... (attempt $((attempts+1)))"
-                sleep 10
-                attempts=$((attempts+1))
-            done
-
-            # If Docker socket is not found, print error and exit
-            if [ ! -S /var/run/docker.sock ]; then
-                echo "Error: Docker socket not found. Check Colima status."
-                colima status
-                colima logs
-                exit 1
-            fi
-
-            # Fix permissions and verify Docker is running
-            sudo chmod 666 /var/run/docker.sock
-            docker info || { echo "Docker is not running properly"; exit 1; }
-
-            echo "Docker and Colima are successfully installed and running."
-
-
-
-      - name: Verify Docker Installation
-        run: docker info
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v2
-        with:
-          install: true
-      - name: Build Docker image using Buildx
-        run: docker buildx build --tag mac-image .
-
-                    
-      # Docker is pre-installed on Ubuntu runners
-      - name: Verify Docker (Ubuntu)
-        if: runner.os == 'Linux'
-        run: docker --version
-
-      # Docker Desktop for Windows
-      - name: Verify Docker (Windows)
-        if: runner.os == 'Windows'
-        run: |
-          docker --version
-        shell: pwsh
-
-      # Set up Docker Buildx (Skip for Windows)
-      - name: Set up Docker Buildx
-        if: runner.os != 'Windows'
-        uses: docker/setup-buildx-action@v3
-        with:
-          install: true
-
-      # Log in to Docker Hub
-      - name: Log in to Docker Hub
-        uses: docker/login-action@v3
-        with:
-          username: ${{ secrets.DOCKER_USERNAME }}
-          password: ${{ secrets.DOCKER_PASSWORD }}
-
-     # Build and push Docker image (Windows)
-      - name: Build and push Docker image (Windows)
-        if: runner.os == 'Windows'
-        shell: pwsh
-        run: |
-          $ErrorActionPreference = 'Stop'
-          Write-Host "Starting Windows Docker build..."
-          
-          # Create Windows-specific Dockerfile
-          @"
-          FROM mcr.microsoft.com/windows/nanoserver:1809
-          
-          WORKDIR C:/app
-          COPY ./build/libs/java-app-1.0-SNAPSHOT.jar .
-          
-          EXPOSE 8080
-          
-          ENTRYPOINT ["java", "-jar", "java-app-1.0-SNAPSHOT.jar"]
-          "@ | Out-File -Encoding ASCII Dockerfile.windows
-          
-          docker build -f Dockerfile.windows -t ${{ secrets.DOCKER_USERNAME }}/java-app:windows-latest .
-          if ($LASTEXITCODE -ne 0) {
-              Write-Host "Docker build failed"
-              exit 1
-          }
-          
-          docker push ${{ secrets.DOCKER_USERNAME }}/java-app:windows-latest
-          if ($LASTEXITCODE -ne 0) {
-              Write-Host "Docker push failed"
-              exit 1
-          }
-      # Build and Push Docker image for Unix systems
-      - name: Build and Push Docker image (Unix)
-        if: runner.os != 'Windows'
-        uses: docker/build-push-action@v5
-        with:
-          context: .
-          file: ./Dockerfile
-          push: true
-          tags: docker.io/sarveshalt/java-app:latest
-          platforms: linux/amd64
-          cache-from: type=registry,ref=docker.io/sarveshalt/java-app:buildcache
-          cache-to: type=registry,ref=docker.io/sarveshalt/java-app:buildcache,mode=max
+      # Docker setup and installation for macOS
+      - name: Install Docker on macOS
+        if: runner.os == 'macos-latest'
+        run
