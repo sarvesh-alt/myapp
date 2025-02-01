@@ -72,17 +72,19 @@ jobs:
 
       - name: Install Docker (macOS)
         run: |
-          echo "Installing Docker..."
-          brew install --cask docker
-          open /Applications/Docker.app
-          killall Docker
-          open /Applications/Docker.app
-          sleep 20
-          ps aux | grep -i docker
-          ls -l /var/run/docker.sock
-          sudo chmod 666 /var/run/docker.sock
+            brew install --cask docker
 
-          sleep 20  # Wait for Colima to initialize
+            # Start Docker.app
+            open /Applications/Docker.app
+
+            # Wait longer for initialization
+            sleep 30
+
+            # Set socket permissions if needed
+            sudo chmod 666 /var/run/docker.sock
+
+            # Verify Docker is running
+            docker info
 
       - name: Verify Docker Installation
         run: docker info
